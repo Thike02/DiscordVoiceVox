@@ -50,8 +50,8 @@ DB_PORT = '5433'
 DB_NAME = 'postgres'
 DB_USER = 'postgres'
 DB_PASS =
-tips_list = ["/setvc　で自分の声を変更できます。","[プレミアムプラン](https://lenlino.com/?page_id=2510)(月100円～)あります。",
-             "[要望・不具合募集中](https://forms.gle/1TvbqzHRz6Q1vSfq9)",]
+tips_list = ["/setvc　で自分の声を変更できます。", "[プレミアムプラン](https://lenlino.com/?page_id=2510)(月100円～)あります。",
+             "[要望・不具合募集中](https://forms.gle/1TvbqzHRz6Q1vSfq9)", ]
 voice_id_list = []
 
 stripe.api_key =
@@ -78,20 +78,19 @@ async def initdatabase():
         await conn.execute('ALTER TABLE guild ADD COLUMN IF NOT EXISTS is_readname boolean;')
 
 
-
 async def init_voice_list():
     headers = {'Content-Type': 'application/json', }
     async with aiohttp.ClientSession() as session:
         async with session.get(
-        f'http://{host}:{port}/speakers',
-        headers=headers,
-        timeout=10
+                f'http://{host}:{port}/speakers',
+                headers=headers,
+                timeout=10
         ) as response2:
             json: list = await response2.json()
         async with session.get(
-            f'http://{coeiroink_host}:{coeiroink_port}/speakers',
-            headers=headers,
-            timeout=10
+                f'http://{coeiroink_host}:{coeiroink_port}/speakers',
+                headers=headers,
+                timeout=10
         ) as response3:
             json2: list = await response3.json()
             for voice_info in json2:
@@ -99,7 +98,6 @@ async def init_voice_list():
                     style_info["id"] += 1000
 
             json.extend(json2)
-
 
     global voice_id_list
     voice_id_list = json
@@ -122,14 +120,14 @@ class VoiceSelectView(discord.ui.Select):
         super().__init__(placeholder='Voice', min_values=1, max_values=1, options=options)
 
     async def callback(self, interaction):  # the function called when the user is done selecting options
-        await interaction.response.edit_message(view=HogeList(name=self.values[0],start=self.start,end=self.end))
+        await interaction.response.edit_message(view=HogeList(name=self.values[0], start=self.start, end=self.end))
 
 
 class HogeList(discord.ui.View):
     def __init__(self, name=None, start=0, end=0):
         super().__init__()
-        self.add_item(VoiceSelectView(default=name, id_list=voice_id_list[start:end],start=start, end=end))
-        self.add_item(VoiceSelectView2(name=name,start=start))
+        self.add_item(VoiceSelectView(default=name, id_list=voice_id_list[start:end], start=start, end=end))
+        self.add_item(VoiceSelectView2(name=name, start=start))
 
 
 class VoiceSelectView2(discord.ui.Select):
@@ -241,18 +239,20 @@ async def vc(ctx):
 async def set(ctx, key: discord.Option(str, choices=[
     discord.OptionChoice(name="voice", value="voice"),
     discord.OptionChoice(name="speed", value="speed"),
-    discord.OptionChoice(name="pitch", value="pitch")], description="設定項目"), value: discord.Option(str, description="設定値", required=False)):
+    discord.OptionChoice(name="pitch", value="pitch")], description="設定項目"),
+              value: discord.Option(str, description="設定値", required=False)):
     await ctx.defer()
     if key == "voice":
         if value is None:
             test_pages = []
-            for i in range(-(-len(voice_id_list)//25)):
+            for i in range(-(-len(voice_id_list) // 25)):
                 name = None
-                if i==0:
+                if i == 0:
                     name = "ずんだもん"
                 else:
-                    name = voice_id_list[i*25]["name"]
-                test_pages.append(pages.Page(content="ボイス・スタイルを選択してください。",custom_view=HogeList(name=name,start=i*25,end=((i+1)*25))))
+                    name = voice_id_list[i * 25]["name"]
+                test_pages.append(pages.Page(content="ボイス・スタイルを選択してください。",
+                                             custom_view=HogeList(name=name, start=i * 25, end=((i + 1) * 25))))
             paginator = pages.Paginator(pages=test_pages)
             await paginator.respond(ctx.interaction)
             return
@@ -331,19 +331,21 @@ async def set(ctx, key: discord.Option(str, choices=[
         await ctx.send_followup(embed=embed)
 
 
-@bot.slash_command(description="サーバーの色々な設定なのだ", name="server-set", default_member_permissions=discord.Permissions.manage_guild)
+@bot.slash_command(description="サーバーの色々な設定なのだ", name="server-set",
+                   default_member_permissions=discord.Permissions.manage_guild)
 @default_permissions(manage_messages=True)
 async def server_set(ctx, key: discord.Option(str, choices=[
     discord.OptionChoice(name="autojoin", value="autojoin"),
     discord.OptionChoice(name="reademoji"),
-    discord.OptionChoice(name="readname")], description="設定項目"), value: discord.Option(str, description="設定値", required=False),):
+    discord.OptionChoice(name="readname")], description="設定項目"),
+                     value: discord.Option(str, description="設定値", required=False), ):
     await ctx.defer()
     guild_id = ctx.guild_id
     if key == "autojoin":
         text_channel_id = ctx.channel_id
         if value == "0":
             setting_json = Json({"text_channel_id": 1, "voice_channel_id": 1})
-            await setdatabase(ctx.guild.id, "auto_join", setting_json,"guild")
+            await setdatabase(ctx.guild.id, "auto_join", setting_json, "guild")
             embed = discord.Embed(
                 title="Changed AutoJoin",
                 description="自動接続を削除しました。",
@@ -360,8 +362,8 @@ async def server_set(ctx, key: discord.Option(str, choices=[
             await ctx.send_followup(embed=embed)
             return
         voice_channel_id = ctx.author.voice.channel.id
-        setting_json = Json({"text_channel_id":text_channel_id, "voice_channel_id":voice_channel_id})
-        await setdatabase(ctx.guild.id, "auto_join", setting_json,"guild")
+        setting_json = Json({"text_channel_id": text_channel_id, "voice_channel_id": voice_channel_id})
+        await setdatabase(ctx.guild.id, "auto_join", setting_json, "guild")
         embed = discord.Embed(
             title="Changed AutoJoin",
             description="現在の接続している音声チャンネル、テキストチャンネルで設定したのだ。(OFFにする際は0をvalueに設定して実行してください。)",
@@ -503,7 +505,6 @@ async def adddict(ctx, surface: discord.Option(input_type=str, description="辞�
         await ctx.respond(embed=embed2)
         return
 
-
     params = (
         ('surface', surface),
         ('pronunciation', pronunciation),
@@ -544,8 +545,6 @@ async def deletedict(ctx, uuid: discord.Option(input_type=str, description="辞�
             timeout=(3.0, 10)
         )
         embed.add_field(name="uuid", value=response2.text)
-
-
 
     await ctx.respond(embed=embed)
 
@@ -588,29 +587,28 @@ async def text2wav(text, voiceid, is_premium: bool, speed="100", pitch="0"):
     counter += 1
     if counter > 30:
         counter = 0
-    filename = "temp"+str(counter)+".wav"
+    filename = "temp" + str(counter) + ".wav"
 
     if voiceid >= 1000:
-        target_host =f"{coeiroink_host}:{coeiroink_port}"
+        target_host = f"{coeiroink_host}:{coeiroink_port}"
         voiceid -= 1000
     else:
         target_port = 50021
         global voiceapi_counter
         target_host = premium_host_list[voiceapi_counter]
-        if voiceapi_counter+1 >= len(premium_host_list):
-            voiceapi_counter=0
+        if voiceapi_counter + 1 >= len(premium_host_list):
+            voiceapi_counter = 0
         else:
-            voiceapi_counter+=1
+            voiceapi_counter += 1
     if await generate_wav(text, voiceid, './' + filename, target_host=target_host,
-                          is_premium=is_premium,speed=speed,pitch=pitch):
+                          is_premium=is_premium, speed=speed, pitch=pitch):
         return filename
     else:
         return "failed"
 
 
 async def generate_wav(text, speaker=1, filepath='./audio.wav', target_host='localhost', target_port=50021,
-                       is_premium=False,speed="100",pitch="0"):
-
+                       is_premium=False, speed="100", pitch="0"):
     params = (
         ('text', text),
         ('speaker', speaker),
@@ -661,9 +659,6 @@ async def generate_wav(text, speaker=1, filepath='./audio.wav', target_host='loc
         return False
 
 
-
-
-
 @bot.event
 async def on_ready():
     print("起動しました")
@@ -692,24 +687,22 @@ async def on_message(message):
             if re.search(pattern, message.content) is not None:
                 url = re.search(pattern, message.content).group()
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(url=url,timeout=5) as response:
+                    async with session.get(url=url, timeout=5) as response:
                         html = await response.text()
-                        title = re.findall('<title>(.*)</title>',html)[0]
+                        title = re.findall('<title>(.*)</title>', html)[0]
                         if title is not None:
-                            output = re.sub(pattern, "URL "+title, output)
+                            output = re.sub(pattern, "URL " + title, output)
         if await getdatabase(message.guild.id, "is_reademoji", True, "guild"):
             output = emoji.demojize(output, language="ja")
-
-
 
         if await getdatabase(message.guild.id, "is_readname", False, "guild"):
             output = message.author.display_name + " " + output
 
-
-
         output = re.sub(pattern, "URL省略", output)
         output = re.sub(pattern_emoji, "", output)
         output = re.sub(pattern_voice, "", output)
+        if len(output) <= 0:
+            return
         output = re.sub("w{4,100}", "笑", output)
         if re.search("[^w]", output) is None:
             output = "笑"
@@ -718,7 +711,6 @@ async def on_message(message):
             voice_id = await getdatabase(message.author.id, "voiceid", 0)
         if len(output) > 100:
             output = output[:100]
-
 
         if len(output) <= 0:
             return
@@ -729,20 +721,25 @@ async def on_message(message):
         generating_guilds.add(message.guild.id)
         try:
             time_sta = time.time()
-            done =True
-            while done:
+            done = True
+            retry_count = 0
+            while done and retry_count < 10:
                 filename = await text2wav(output, int(voice_id), is_premium,
                                           speed=await getdatabase(message.author.id, "speed", 100),
                                           pitch=await getdatabase(message.author.id, "pitch", 0))
                 if filename != "failed":
-                    print("合成失敗")
                     done = False
+                else:
+                    print("合成失敗")
+                    retry_count += 1
+                    if retry_count >= 10:
+                        return
 
             time_end = time.time()
             tim = time_end - time_sta
-            print("音声合成:"+str(tim))
+            print("音声合成:" + str(tim))
             time_sta = time.time()
-            source = await wavelink.LocalTrack.search(query=os.path.dirname(os.path.abspath(__file__)) + "/" + filename,
+            source = await wavelink.GenericTrack.search(os.path.dirname(os.path.abspath(__file__)) + "/" + filename,
                                                       return_first=True)
             time_end = time.time()
             tim = time_end - time_sta
@@ -783,7 +780,8 @@ async def on_voice_state_update(member, before, after):
     if voicestate is None:
         return
 
-    if (voicestate.client.user.id == member.id and after.channel is None) or (len(voicestate.channel.members) == 1 and (member.bot is False or voicestate.channel.members[0].bot)):
+    if (voicestate.client.user.id == member.id and after.channel is None) or (
+            len(voicestate.channel.members) == 1 and (member.bot is False or voicestate.channel.members[0].bot)):
         await voicestate.disconnect()
         del vclist[voicestate.guild.id]
 
@@ -827,21 +825,17 @@ async def init_loop():
     await updatedict()
 
 
-
 async def connect_nodes():
     """Connect to our Lavalink nodes."""
     await bot.wait_until_ready()
-    await wavelink.NodePool.create_node(
-        bot=bot,
-        host='127.0.0.1',
-        port=2333,
-        password='youshallnotpass',
-    )
+    node: wavelink.Node = wavelink.Node(uri='http://localhost:2333', password='youshallnotpass')
+    await wavelink.NodePool.connect(client=bot, nodes=[node])
+
 
 async def save_customemoji(custom_emoji, kana):
     with open("custom_emoji.json") as f:
         json_data = json.load(f)
-    json_data.update({custom_emoji : {"ja" : " "+kana+" "}})
+    json_data.update({custom_emoji: {"ja": " " + kana + " "}})
     with open('custom_emoji.json', 'wt') as f:
         json.dump(json_data, f, ensure_ascii=False)
     importlib.reload(emoji)
@@ -849,27 +843,25 @@ async def save_customemoji(custom_emoji, kana):
 
 
 async def updatedict():
-    with open("custom_emoji.json",) as f:
+    with open("custom_emoji.json", ) as f:
         json_data = json.load(f)
     emoji.EMOJI_DATA.update(json_data)
 
     headers = {'Content-Type': 'application/json', }
     async with aiohttp.ClientSession() as session:
         async with session.get(
-        f'http://{host}:{port}/user_dict',
-        headers=headers,
-        timeout=10
+                f'http://{host}:{port}/user_dict',
+                headers=headers,
+                timeout=10
         ) as response2:
             result = await response2.json()
             print(result)
         for d_host in premium_host_list:
             async with session.post(f'http://{d_host}/import_user_dict?override=true',
-                                            headers=headers,
-                                            data=json.dumps(result),
-                                            timeout=30) as response1:
+                                    headers=headers,
+                                    data=json.dumps(result),
+                                    timeout=30) as response1:
                 print(response1)
-
-
 
 
 if __name__ == '__main__':
